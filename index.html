@@ -573,7 +573,7 @@ $(function () {
   });
 
   // Auto-check the first N cards on load so obviously dead items are already filtered out.
-  const AUTO_CHECK_COUNT = 10;
+  const AUTO_CHECK_COUNT = 25;
   function autoLocateFirst(n) {
     $results.find('.result-card').slice(0, n).each(function () {
       locateFile($(this));

@@ -427,12 +427,14 @@ $(function () {
         : '';
       const identifier = doc.identifier;
       const detailUrl = 'https://archive.org/details/' + encodeURIComponent(identifier);
-      const thumbUrl = 'https://archive.org/services/img/' + encodeURIComponent(identifier);
+      // Direct thumbnail file — 404s cleanly if the item has none, instead of
+      // services/img's behavior of silently substituting the generic Archive.org logo.
+      const thumbUrl = 'https://archive.org/download/' + encodeURIComponent(identifier) + '/__ia_thumb.jpg';
       const downloads = (typeof doc.downloads === 'number') ? doc.downloads.toLocaleString() : null;
 
       const $card = $(
         '<div class="result-card ' + (label.cls === 'audio' ? 'audio' : '') + '" data-identifier="' + escapeHtml(identifier) + '" data-mediatype="' + escapeHtml(doc.mediatype || '') + '">' +
-          '<img class="result-thumb" src="' + thumbUrl + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
+          '<img class="result-thumb" src="' + thumbUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
           '<div class="result-body">' +
             '<span class="result-tag ' + label.cls + '">' + label.text + '</span>' +
             '<div class="result-title"><a href="' + detailUrl + '" target="_blank" rel="noopener">' + title + '</a></div>' +
@@ -468,7 +470,9 @@ $(function () {
     return $.ajax({
       url: 'https://archive.org/metadata/' + encodeURIComponent(identifier),
       method: 'GET',
-      dataType: 'json'
+      dataType: 'jsonp',
+      jsonp: 'callback',
+      timeout: 15000
     })
     .done(function (data) {
       const files = (data && data.files) || [];

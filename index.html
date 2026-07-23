@@ -57,6 +57,18 @@
     max-width:42rem;
     margin-bottom:0;
   }
+  #updateNote{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    color:var(--verdigris-dark);
+    background:#E4E7D9;
+    border:1px solid var(--rule);
+    padding:.25rem .55rem;
+    border-radius:2px;
+    margin:.35rem 0 .6rem;
+    max-width:52rem;
+  }
 
   /* ---------- Search "index card" ---------- */
   .catalog-card{
@@ -296,6 +308,7 @@
   <div class="container">
     <div class="eyebrow">Internet Archive · Client-Side Lookup</div>
     <h1>Stack Search</h1>
+    <br><span id="updateNote">UPDATE: Metadata lookups now try a plain request first, then automatically retry over JSONP if that fails (to work around Archive.org's inconsistent CORS support) — errors are shown in the status text and logged to the browser console instead of failing silently. Thumbnails reverted to the documented services/img endpoint after the previous guessed filename turned out to be wrong for most items.</span>
     <p>Search the Internet Archive's public catalog for video and audio items. This page talks directly to archive.org — nothing is stored or logged here.</p>
   </div>
 </header>
@@ -427,9 +440,8 @@ $(function () {
         : '';
       const identifier = doc.identifier;
       const detailUrl = 'https://archive.org/details/' + encodeURIComponent(identifier);
-      // Direct thumbnail file — 404s cleanly if the item has none, instead of
-      // services/img's behavior of silently substituting the generic Archive.org logo.
-      const thumbUrl = 'https://archive.org/download/' + encodeURIComponent(identifier) + '/__ia_thumb.jpg';
+      // Documented Archive.org thumbnail endpoint — resolves per-item automatically server-side.
+      const thumbUrl = 'https://archive.org/services/img/' + encodeURIComponent(identifier);
       const downloads = (typeof doc.downloads === 'number') ? doc.downloads.toLocaleString() : null;
 
       const $card = $(
@@ -467,14 +479,26 @@ $(function () {
     $btnLocate.prop('disabled', true).text('Locating…');
     $status.text('Checking…');
 
-    return $.ajax({
-      url: 'https://archive.org/metadata/' + encodeURIComponent(identifier),
-      method: 'GET',
-      dataType: 'jsonp',
-      jsonp: 'callback',
-      timeout: 15000
-    })
-    .done(function (data) {
+    function tryJson() {
+      return $.ajax({
+        url: 'https://archive.org/metadata/' + encodeURIComponent(identifier),
+        method: 'GET',
+        dataType: 'json',
+        timeout: 12000
+      });
+    }
+
+    function tryJsonp() {
+      return $.ajax({
+        url: 'https://archive.org/metadata/' + encodeURIComponent(identifier),
+        method: 'GET',
+        dataType: 'jsonp',
+        jsonp: 'callback',
+        timeout: 12000
+      });
+    }
+
+    function handleData(data) {
       const files = (data && data.files) || [];
       const matches = findMatchingFiles(files, mediatype);
 
@@ -527,11 +551,21 @@ $(function () {
         $list.toggleClass('d-none');
         $toggle.text(showing ? 'Show files' : 'Hide files');
       });
-    })
-    .fail(function (xhr) {
-      $btnLocate.prop('disabled', false).text('Retry');
-      $status.text('Lookup failed (' + (xhr.status || 'network error') + ').');
-    });
+    }
+
+    return tryJson()
+      .done(handleData)
+      .fail(function (xhr1, status1) {
+        console.warn('[Stack Search] plain JSON metadata fetch failed for', identifier, status1, xhr1 && xhr1.status);
+        // Plain XHR failed (likely CORS) — retry via JSONP, which doesn't need CORS headers.
+        tryJsonp()
+          .done(handleData)
+          .fail(function (xhr2, status2) {
+            console.warn('[Stack Search] JSONP metadata fetch also failed for', identifier, status2);
+            $btnLocate.prop('disabled', false).text('Retry');
+            $status.text('Lookup failed — ' + (status2 || 'error') + '. See browser console for details.');
+          });
+      });
   }
 
   // Manual click on any "Locate file" button.

@@ -82,15 +82,25 @@
     margin-bottom:.6rem;
   }
 
-  #searchInput{
+  .field-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.7rem;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:#6B6656;
+    margin-bottom:.25rem;
+    display:block;
+  }
+
+  #searchInput, .form-select, .form-control{
     border-radius:2px;
     border:1px solid #B8AF98;
     background:#fff;
     font-family:'IBM Plex Mono', monospace;
-    font-size:.95rem;
-    padding:.65rem .9rem;
+    font-size:.9rem;
   }
-  #searchInput:focus{
+  #searchInput{ padding:.65rem .9rem; font-size:.95rem; }
+  #searchInput:focus, .form-select:focus, .form-control:focus{
     border-color:var(--verdigris);
     box-shadow:0 0 0 .2rem rgba(47,110,98,.18);
   }
@@ -110,6 +120,35 @@
   .btn-vault:hover{ background:var(--verdigris-dark); color:#fff; }
   .btn-vault:disabled{ opacity:.6; }
 
+  .btn-locate{
+    background:transparent;
+    border:1px solid var(--verdigris);
+    color:var(--verdigris-dark);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:.3rem .7rem;
+    border-radius:2px;
+  }
+  .btn-locate:hover{ background:var(--verdigris); color:#fff; }
+  .btn-locate:disabled{ opacity:.55; }
+
+  .btn-download{
+    background:var(--amber);
+    border:1px solid #96701D;
+    color:#fff;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:.3rem .7rem;
+    border-radius:2px;
+    text-decoration:none;
+    display:inline-block;
+  }
+  .btn-download:hover{ background:#96701D; color:#fff; }
+
   .mediatype-toggle .form-check-label{
     font-family:'IBM Plex Mono', monospace;
     font-size:.82rem;
@@ -127,15 +166,29 @@
     background:var(--paper-raised);
     border:1px solid var(--rule);
     border-left:3px solid var(--verdigris);
-    padding:1rem 1.15rem;
+    padding:.9rem 1.1rem;
     margin-bottom:.85rem;
     transition:box-shadow .15s ease, transform .15s ease;
+    display:flex;
+    gap:1rem;
   }
   .result-card:hover{
     box-shadow:0 10px 20px -14px rgba(32,36,31,.5);
     transform:translateY(-1px);
   }
   .result-card.audio{ border-left-color:var(--amber); }
+
+  .result-thumb{
+    flex:0 0 96px;
+    width:96px;
+    height:72px;
+    background:#E3DDC9 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"></svg>') center/cover;
+    border:1px solid var(--rule);
+    object-fit:cover;
+    display:block;
+  }
+
+  .result-body{ flex:1 1 auto; min-width:0; }
 
   .result-tag{
     font-family:'IBM Plex Mono', monospace;
@@ -173,11 +226,54 @@
   }
 
   .result-desc{
-    font-size:.92rem;
+    font-size:.9rem;
     color:#3A3A32;
-    margin-top:.35rem;
-    max-height:2.8em;
+    margin-top:.3rem;
+    max-height:2.6em;
     overflow:hidden;
+  }
+
+  .locate-row{
+    margin-top:.55rem;
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    flex-wrap:wrap;
+  }
+
+  .locate-status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    color:#8B856F;
+  }
+
+  .file-list{
+    flex-basis:100%;
+    margin-top:.5rem;
+    border-top:1px dashed var(--rule);
+    padding-top:.5rem;
+    display:flex;
+    flex-direction:column;
+    gap:.4rem;
+  }
+  .file-row{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    font-size:.75rem;
+  }
+  .file-row .file-name{
+    flex:1 1 auto;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--ink);
+  }
+  .file-row .file-meta{
+    flex:0 0 auto;
+    color:#8B856F;
+    white-space:nowrap;
   }
 
   footer{
@@ -209,12 +305,14 @@
   <div class="catalog-card mb-4">
     <div class="card-label">Query</div>
     <form id="searchForm" class="row g-3 align-items-end" autocomplete="off">
-      <div class="col-12 col-md-7">
-        <label for="searchInput" class="form-label mono" style="font-size:.78rem;">Search term</label>
+      <div class="col-12 col-lg-4">
+        <label for="searchInput" class="field-label">Search term</label>
         <input type="text" id="searchInput" class="form-control" placeholder="e.g. apollo 11, jazz 1958, silent film…" required>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="mediatype-toggle d-flex gap-3">
+
+      <div class="col-6 col-md-3 col-lg-2">
+        <span class="field-label">Media type</span>
+        <div class="mediatype-toggle d-flex gap-3 pt-1">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="typeVideo" checked>
             <label class="form-check-label" for="typeVideo">Video</label>
@@ -225,7 +323,28 @@
           </div>
         </div>
       </div>
-      <div class="col-6 col-md-2 d-grid">
+
+      <div class="col-6 col-md-3 col-lg-2">
+        <label for="sortSelect" class="field-label">Sort by</label>
+        <select id="sortSelect" class="form-select">
+          <option value="relevance">Relevance</option>
+          <option value="downloads" selected>Most downloaded</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="title">Title A–Z</option>
+        </select>
+      </div>
+
+      <div class="col-6 col-md-3 col-lg-2">
+        <label for="yearFrom" class="field-label">Year from</label>
+        <input type="number" id="yearFrom" class="form-control" placeholder="e.g. 1960" min="1850" max="2026">
+      </div>
+      <div class="col-6 col-md-3 col-lg-2">
+        <label for="yearTo" class="field-label">Year to</label>
+        <input type="number" id="yearTo" class="form-control" placeholder="e.g. 2000" min="1850" max="2026">
+      </div>
+
+      <div class="col-12 col-lg-12 d-grid d-lg-block text-lg-end">
         <button type="submit" class="btn btn-vault" id="searchBtn">Search</button>
       </div>
     </form>
@@ -240,7 +359,7 @@
 
 <footer>
   <div class="container">
-    STACK SEARCH — queries the public Internet Archive Advanced Search API (advancedsearch.php). Top 50 results, ranked by relevance.
+    STACK SEARCH — queries the public Internet Archive Advanced Search API (advancedsearch.php). Top 50 results. Click "Locate file" on any item to resolve a direct, downloadable H.264/MPEG4 (video) or MP3 (audio) link via the Archive.org metadata API.
   </div>
 </footer>
 
@@ -264,11 +383,36 @@ $(function () {
     return { text: (mt || 'ITEM').toUpperCase(), cls: 'video' };
   }
 
+  function formatBytes(bytes) {
+    const n = Number(bytes);
+    if (!n) return null;
+    if (n > 1e9) return (n / 1e9).toFixed(1) + ' GB';
+    if (n > 1e6) return (n / 1e6).toFixed(1) + ' MB';
+    return (n / 1e3).toFixed(0) + ' KB';
+  }
+
+  // Preferred file-format patterns, checked in order, per media type.
+  const VIDEO_FORMAT_PATTERNS = [/h\.?264/i, /mpeg-?4/i, /mp4/i];
+  const AUDIO_FORMAT_PATTERNS = [/vbr mp3/i, /^mp3$/i, /mp3/i];
+
+  function findMatchingFiles(files, mediatype) {
+    const patterns = mediatype === 'audio' ? AUDIO_FORMAT_PATTERNS : VIDEO_FORMAT_PATTERNS;
+    for (const pattern of patterns) {
+      const matches = files.filter(f => f.format && pattern.test(f.format) && f.name && !/\.(xml|sqlite|torrent)$/i.test(f.name));
+      if (matches.length) {
+        // Largest first — usually the primary derivative rather than a thumbnail/sample/preview.
+        matches.sort((a, b) => (Number(b.size) || 0) - (Number(a.size) || 0));
+        return matches;
+      }
+    }
+    return [];
+  }
+
   function renderResults(docs) {
     $results.empty();
 
     if (!docs || docs.length === 0) {
-      $empty.removeClass('d-none').text('No items matched that search. Try a different term.');
+      $empty.removeClass('d-none').text('No items matched that search. Try different terms or filters.');
       return;
     }
     $empty.addClass('d-none');
@@ -281,29 +425,140 @@ $(function () {
       const desc = doc.description
         ? escapeHtml(Array.isArray(doc.description) ? doc.description[0] : doc.description)
         : '';
-      const url = 'https://archive.org/details/' + encodeURIComponent(doc.identifier);
+      const identifier = doc.identifier;
+      const detailUrl = 'https://archive.org/details/' + encodeURIComponent(identifier);
+      const thumbUrl = 'https://archive.org/services/img/' + encodeURIComponent(identifier);
       const downloads = (typeof doc.downloads === 'number') ? doc.downloads.toLocaleString() : null;
 
       const $card = $(
-        '<div class="result-card ' + (label.cls === 'audio' ? 'audio' : '') + '">' +
-          '<span class="result-tag ' + label.cls + '">' + label.text + '</span>' +
-          '<div class="result-title"><a href="' + url + '" target="_blank" rel="noopener">' + title + '</a></div>' +
-          '<div class="result-meta">' +
-            (creator ? escapeHtml(creator) + ' &middot; ' : '') +
-            (year ? year + ' &middot; ' : '') +
-            escapeHtml(doc.identifier) +
-            (downloads ? ' &middot; ' + downloads + ' downloads' : '') +
+        '<div class="result-card ' + (label.cls === 'audio' ? 'audio' : '') + '" data-identifier="' + escapeHtml(identifier) + '" data-mediatype="' + escapeHtml(doc.mediatype || '') + '">' +
+          '<img class="result-thumb" src="' + thumbUrl + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
+          '<div class="result-body">' +
+            '<span class="result-tag ' + label.cls + '">' + label.text + '</span>' +
+            '<div class="result-title"><a href="' + detailUrl + '" target="_blank" rel="noopener">' + title + '</a></div>' +
+            '<div class="result-meta">' +
+              (creator ? escapeHtml(creator) + ' &middot; ' : '') +
+              (year ? year + ' &middot; ' : '') +
+              escapeHtml(identifier) +
+              (downloads ? ' &middot; ' + downloads + ' downloads' : '') +
+            '</div>' +
+            (desc ? '<div class="result-desc">' + desc + '</div>' : '') +
+            '<div class="locate-row">' +
+              '<button type="button" class="btn-locate btn-locate-action">Locate file</button>' +
+              '<span class="locate-status"></span>' +
+            '</div>' +
           '</div>' +
-          (desc ? '<div class="result-desc">' + desc + '</div>' : '') +
         '</div>'
       );
       $results.append($card);
     });
   }
 
+  // Fetch item metadata, resolve direct downloadable file(s), and update the card.
+  // Removes the card entirely if no matching file is found.
+  function locateFile($card) {
+    const $status = $card.find('.locate-status');
+    const $btnLocate = $card.find('.btn-locate-action');
+    const identifier = $card.data('identifier');
+    const mediatype = $card.data('mediatype');
+
+    $btnLocate.prop('disabled', true).text('Locating…');
+    $status.text('Checking…');
+
+    return $.ajax({
+      url: 'https://archive.org/metadata/' + encodeURIComponent(identifier),
+      method: 'GET',
+      dataType: 'json'
+    })
+    .done(function (data) {
+      const files = (data && data.files) || [];
+      const matches = findMatchingFiles(files, mediatype);
+
+      if (matches.length === 0) {
+        $card.fadeOut(150, function () {
+          $(this).remove();
+          if ($results.children().length === 0) {
+            $empty.removeClass('d-none').text('No items with a direct downloadable file remain — try a different search.');
+          }
+        });
+        return;
+      }
+
+      $btnLocate.remove();
+
+      if (matches.length === 1) {
+        // Exactly one match — skip the list, link straight to the file.
+        const only = matches[0];
+        const fileUrl = 'https://archive.org/download/' + encodeURIComponent(identifier) + '/' + encodeURIComponent(only.name);
+        const size = formatBytes(only.size);
+        $status.html('<span class="mono">' + escapeHtml(only.format) + (size ? ' &middot; ' + size : '') + '</span>');
+        $status.after(
+          '<a class="btn-download" href="' + fileUrl + '" download target="_blank" rel="noopener">Download file</a>'
+        );
+        return;
+      }
+
+      // Multiple matches — show a toggle that expands into a list of every file.
+      $status.text(matches.length + ' files available');
+      const $toggle = $('<button type="button" class="btn-locate btn-toggle-filelist">Show files</button>');
+      $status.after($toggle);
+
+      const $list = $('<div class="file-list d-none"></div>');
+      matches.forEach(function (f) {
+        const fileUrl = 'https://archive.org/download/' + encodeURIComponent(identifier) + '/' + encodeURIComponent(f.name);
+        const size = formatBytes(f.size);
+        const $row = $(
+          '<div class="file-row">' +
+            '<span class="file-name mono" title="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</span>' +
+            '<span class="file-meta mono">' + escapeHtml(f.format) + (size ? ' &middot; ' + size : '') + '</span>' +
+            '<a class="btn-download" href="' + fileUrl + '" download target="_blank" rel="noopener">Download</a>' +
+          '</div>'
+        );
+        $list.append($row);
+      });
+      $toggle.after($list);
+
+      $toggle.on('click', function () {
+        const showing = !$list.hasClass('d-none');
+        $list.toggleClass('d-none');
+        $toggle.text(showing ? 'Show files' : 'Hide files');
+      });
+    })
+    .fail(function (xhr) {
+      $btnLocate.prop('disabled', false).text('Retry');
+      $status.text('Lookup failed (' + (xhr.status || 'network error') + ').');
+    });
+  }
+
+  // Manual click on any "Locate file" button.
+  $results.on('click', '.btn-locate-action', function () {
+    locateFile($(this).closest('.result-card'));
+  });
+
+  // Auto-check the first N cards on load so obviously dead items are already filtered out.
+  const AUTO_CHECK_COUNT = 10;
+  function autoLocateFirst(n) {
+    $results.find('.result-card').slice(0, n).each(function () {
+      locateFile($(this));
+    });
+  }
+  });
+
+  function buildSortParam(choice) {
+    switch (choice) {
+      case 'downloads': return ['downloads desc'];
+      case 'newest': return ['publicdate desc'];
+      case 'oldest': return ['publicdate asc'];
+      case 'title': return ['titleSorter asc'];
+      default: return []; // relevance — let the API default to score
+    }
+  }
+
   function doSearch(term) {
     const wantVideo = $('#typeVideo').is(':checked');
     const wantAudio = $('#typeAudio').is(':checked');
+    const yearFrom = $('#yearFrom').val().trim();
+    const yearTo = $('#yearTo').val().trim();
 
     if (!wantVideo && !wantAudio) {
       $error.removeClass('d-none').text('Select at least one media type (video or audio).');
@@ -315,7 +570,13 @@ $(function () {
     else if (wantVideo) mediaClause = 'mediatype:(movies)';
     else mediaClause = 'mediatype:(audio)';
 
-    const q = '(' + term.replace(/"/g, '\\"') + ') AND ' + mediaClause;
+    let q = '(' + term.replace(/"/g, '\\"') + ') AND ' + mediaClause;
+
+    if (yearFrom || yearTo) {
+      const from = yearFrom || '1850';
+      const to = yearTo || '2026';
+      q += ' AND year:[' + from + ' TO ' + to + ']';
+    }
 
     $error.addClass('d-none');
     $empty.addClass('d-none');
@@ -330,7 +591,7 @@ $(function () {
       data: {
         q: q,
         fl: ['identifier', 'title', 'creator', 'description', 'mediatype', 'year', 'date', 'downloads'],
-        sort: ['downloads desc'],
+        sort: buildSortParam($('#sortSelect').val()),
         rows: 50,
         page: 1,
         output: 'json'
@@ -344,9 +605,10 @@ $(function () {
 
       $meta.text(
         'Showing ' + docs.length + ' of ' + numFound.toLocaleString() +
-        ' result' + (numFound === 1 ? '' : 's') + ' for “' + term + '”'
+        ' result' + (numFound === 1 ? '' : 's') + ' for “' + term + '” — checking top ' + Math.min(AUTO_CHECK_COUNT, docs.length) + ' for direct files…'
       );
       renderResults(docs);
+      autoLocateFirst(AUTO_CHECK_COUNT);
     })
     .fail(function (xhr) {
       $meta.text('');

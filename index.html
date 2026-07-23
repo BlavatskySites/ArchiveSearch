@@ -308,7 +308,7 @@
   <div class="container">
     <div class="eyebrow">Internet Archive · Client-Side Lookup</div>
     <h1>Stack Search</h1>
-    <br><span id="updateNote">UPDATE: Metadata lookups now try a plain request first, then automatically retry over JSONP if that fails (to work around Archive.org's inconsistent CORS support) — errors are shown in the status text and logged to the browser console instead of failing silently. Thumbnails reverted to the documented services/img endpoint after the previous guessed filename turned out to be wrong for most items.</span>
+    <br><span id="updateNote">UPDATE: Found the real bug — the search request used the wrong array format for requested fields, so Archive.org silently dropped title/creator/thumbnail data from every result, keeping only one field. Fixed the format; file-list buttons now show a count.</span>
     <p>Search the Internet Archive's public catalog for video and audio items. This page talks directly to archive.org — nothing is stored or logged here.</p>
   </div>
 </header>
@@ -528,7 +528,7 @@ $(function () {
 
       // Multiple matches — show a toggle that expands into a list of every file.
       $status.text(matches.length + ' files available');
-      const $toggle = $('<button type="button" class="btn-locate btn-toggle-filelist">Show files</button>');
+      const $toggle = $('<button type="button" class="btn-locate btn-toggle-filelist">Show ' + matches.length + ' files</button>');
       $status.after($toggle);
 
       const $list = $('<div class="file-list d-none"></div>');
@@ -549,7 +549,7 @@ $(function () {
       $toggle.on('click', function () {
         const showing = !$list.hasClass('d-none');
         $list.toggleClass('d-none');
-        $toggle.text(showing ? 'Show files' : 'Hide files');
+        $toggle.text(showing ? 'Show ' + matches.length + ' files' : 'Hide files');
       });
     }
 
@@ -632,8 +632,11 @@ $(function () {
         rows: 50,
         page: 1,
         output: 'json'
-      },
-      traditional: true
+      }
+      // NOTE: no `traditional: true` here — Archive.org's advancedsearch.php expects
+      // array params as fl[]=a&fl[]=b (jQuery's default array serialization).
+      // traditional:true instead sends bare fl=a&fl=b, which PHP collapses to only
+      // the LAST value, silently dropping title/creator/description from every result.
     })
     .done(function (data) {
       const resp = data && data.response ? data.response : null;

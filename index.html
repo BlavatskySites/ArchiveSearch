@@ -307,9 +307,8 @@
 <header class="masthead">
   <div class="container">
     <div class="eyebrow">Internet Archive · Client-Side Lookup</div>
-    <h1>Stack Search</h1>
-    <br><span id="updateNote">UPDATE: Found the real bug — the search request used the wrong array format for requested fields, so Archive.org silently dropped title/creator/thumbnail data from every result, keeping only one field. Fixed the format; file-list buttons now show a count.</span>
-    <p>Search the Internet Archive's public catalog for video and audio items. This page talks directly to archive.org — nothing is stored or logged here.</p>
+    <h1>Archive Crawler</h1>
+      <p>Search the Internet Archive's public catalog for video and audio items. This page talks directly to archive.org — nothing is stored or logged here.</p>
   </div>
 </header>
 
@@ -320,7 +319,7 @@
     <form id="searchForm" class="row g-3 align-items-end" autocomplete="off">
       <div class="col-12 col-lg-4">
         <label for="searchInput" class="field-label">Search term</label>
-        <input type="text" id="searchInput" class="form-control" placeholder="e.g. apollo 11, jazz 1958, silent film…" required>
+        <input type="text" id="searchInput" class="form-control" placeholder="e.g. 1985, Full Movie, Mixtape…" required>
       </div>
 
       <div class="col-6 col-md-3 col-lg-2">
@@ -331,7 +330,7 @@
             <label class="form-check-label" for="typeVideo">Video</label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="typeAudio" checked>
+            <input class="form-check-input" type="checkbox" id="typeAudio">
             <label class="form-check-label" for="typeAudio">Audio</label>
           </div>
         </div>
